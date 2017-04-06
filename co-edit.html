@@ -1,5 +1,12 @@
 <link rel="import" href="bower_components/polymer/polymer.html">
+<link rel="import" href="bower_components/paper-dialog/paper-dialog.html">
+<link rel="import" href="bower_components/paper-input/paper-textarea.html">
+<link rel="import" href="bower_components/paper-input/paper-input.html">
+<link rel="import" href="bower_components/paper-button/paper-button.html">
 <link rel="import" href="co-edit-suggestions.html">
+
+<script src="https://www.gstatic.com/firebasejs/3.7.5/firebase.js"></script>
+
 
 <!--
 `co-edit`
@@ -11,107 +18,167 @@ Widget to community edit text
 <dom-module id="co-edit">
   <template>
     <style>
-      :host {
+       :host {
         display: block;
       }
-    </style>
-    <h2>co-edit core</h2>
+      paper-button#improve {
+        background-color: yellow;
+      }
+    </style>    
+    <paper-button id="improve" raised>Verbeter</paper-button>
+    
+    <paper-dialog id='dialog' opened="{{dialogOpened}}">
+      <h2>Stel een verbetering voor</h2>
+      <paper-textarea label="Wat zou de tekst moeten zijn?" value="{{newString}}"></paper-textarea>
+      <paper-input label="Uw e-mail adres" value="{{email}}"></paper-input>
+      <div class="buttons">
+        <paper-button dialog-dismiss>Cancel</paper-button>
+        <paper-button dialog-confirm autofocus>Submit</paper-button>
+      </div>
+    </paper-dialog>
   </template>
 
   <script>
+    // Initialize Firebase
+    var config = {
+      apiKey: "AIzaSyAhEMfDT9XHCqbxF4STUO2IrP6j4-7lwbk",
+      authDomain: "co-edit.firebaseapp.com",
+      databaseURL: "https://co-edit.firebaseio.com",
+      projectId: "co-edit",
+      storageBucket: "co-edit.appspot.com",
+      messagingSenderId: "798350171172"
+    };
+    firebase.initializeApp(config);
+
     Polymer({
 
       is: 'co-edit',
 
       properties: {
-        prop1: {
+        string: {
           type: String,
-          value: 'co-edit',
+          value: 'co-edit'
         },
+        newString: {
+          type: String,
+          value: ''
+        },
+        email: {
+          type: String,
+          value: '',
+        },
+        dialogOpened: {
+          type: Boolean,
+          value: false,
+          observers: [
+            'dialogOpenedChanged'
+          ]
+        }
+      },
+      listeners: {
+        "iron-overlay-closed": 'overlayClosed',
+      },
+      dialogOpenedChanged: function (val, old) {
+        console.log('dialogOpenedChanged')
+        this.closePopup()
+      },
+      attached: function () {
+        console.log('attached co-edit')
+        window.popupSuggestions = this
+        this.attach()
+      },
+      element: document.body,
+      log: true,
+      popupElement: null,
+      attach() {
+        console.log(this.element)
+        var mouseUpEventListener = this.mouseUpEventListener()
+        this.element.addEventListener('mouseup', mouseUpEventListener, this)
+      },
+      detach() {
+        console.log('detach')
+      },
+      mouseUpEventListener() {
+        var self = this
+        return function (evt) {
+          console.log(self, this, arguments)
+
+          if (self.getSelection().toString() !== '' && !self.dialogOpened) {
+            console.log(self.getSelection().toString())
+
+            self.set('string', self.getSelection().anchorNode.data)
+            self.set('newString', self.getSelection().anchorNode.data)
+
+            return self.openPopup(self.getSelection(), self.calculatePopupPosition(evt))
+          }
+          self.closePopup()
+        }
+      },
+      openPopup(selection, position) {
+        console.log('openPopup', selection)
+        this.popupElement = this.createPopupElement(selection.toString(), position)
+        if (this.element.querySelectorAll('.popupSuggestionsPopup').length !== 0) {
+          this.element.removeChild(this.element.querySelector('.popupSuggestionsPopup'))
+        }
+        this.element.appendChild(this.popupElement)
+      },
+      createPopupElement(textContent, position) {
+        var self = this
+        e = document.createElement('div')
+        e.className = 'popupSuggestionsPopup'
+        e.style.position = 'absolute'
+        e.style.top = position.top + 'px'
+        e.style.left = position.left + 'px'
+
+        var improveButton = this.$.improve
+        improveButton.onmouseup = function () {
+          self.openDialog()
+        }
+        e.appendChild(improveButton)
+
+        return this.popupElement = e
+      },
+      openDialog() {
+        console.log('openDialog')
+        this.closePopup()
+        this.set('dialogOpened', true)
+      },
+      calculatePopupPosition(evt) {
+        var position = {
+          top: evt.clientY,
+          left: evt.clientX,
+          right: null,
+          bottom: null
+        }
+
+        return position
+      },
+      closePopup() {
+        // console.log('closePopup')
+        var allPopups = document.querySelectorAll('#improve')
+        allPopups.forEach(function (node) {
+          node.parentNode.removeChild(node)
+        })
+      },
+      getSelection() {
+        return window.getSelection()
+      },
+      overlayClosed(evt) {
+        var self = this
+        if(evt.detail.confirmed == true) {
+          console.log(evt.detail)
+          firebase.database().ref('/suggestions/' + Date.now()).set({
+            string: self.string,
+            newString: self.newString,
+            email: self.email,
+          })
+        }
+      },
+      _log() {
+        if (!this.log) return
+        console.log(arguments)
       },
 
     });
-
-    function PopupSuggestions () {
-      var self = {
-          element: document.body,
-          log: true,
-          popupElement: null,
-          attach () {
-              self._log(self.element)
-              self.element.addEventListener('mouseup', self.mouseUpEventListener, self)
-          },
-          detach () {
-              self._log('detach')
-          },
-          mouseUpEventListener (evt) {
-              console.log(self)
-              if (self.getSelection().toString() !== '') {
-                  self._log(self.getSelection().toString())
-                  return self.openPopup(self.getSelection(), self.calculatePopupPosition(evt))
-              }
-              self.closePopup()
-          },
-          openPopup (selection, position) {
-              self._log('openPopup', selection)
-              self.popupElement = self.createPopupElement(selection.toString(), position)
-              if(self.element.querySelectorAll('.popupSuggestionsPopup').length !== 0) {
-                  self.element.removeChild(self.element.querySelector('.popupSuggestionsPopup'))
-              }
-              self.element.appendChild(self.popupElement)
-          },
-          createPopupElement (textContent, position) {
-              e = document.createElement('div')
-              e.className = 'popupSuggestionsPopup'
-              e.style.backgroundColor = 'yellow'
-              e.style.position = 'absolute'
-              e.style.top = position.top + 'px'
-              e.style.left = position.left + 'px'
-              e.style.padding = '10px'
-              e.style.boxShadow = '1px 1px 3px #000'
-
-              e.textContent = 'Verbeter vertaling van: ' + textContent
-              var improveButton = document.createElement('button')
-              improveButton.textContent = 'Verbeter'
-              e.appendChild(improveButton)
-
-              var coEdit = document.createElement('co-edit-suggestions')
-              e.appendChild(coEdit)
-
-              return self.popupElement = e
-          },
-          calculatePopupPosition (evt) {
-              var position = {
-                  top: evt.clientY,
-                  left: evt.clientX,
-                  right: null,
-                  bottom: null
-              }
-
-              return position
-          },
-          closePopup () {
-              self._log('closePopup')
-              var allPopups = document.querySelectorAll('.popupSuggestionsPopup')
-              allPopups.forEach(function (node) {
-                  node.parentNode.removeChild(node)
-              })
-          },
-          getSelection () {
-              return window.getSelection()
-          },
-          _log () {
-              if(!self.log) return
-              console.log(arguments)
-          },
-      }
-      return self
-  }
-
-  window.addEventListener('load', function() {
-      window.popupSuggestions = PopupSuggestions()
-      window.popupSuggestions.attach()
-  })
-
   </script>
 </dom-module>
