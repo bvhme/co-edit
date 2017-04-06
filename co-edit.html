@@ -1,0 +1,117 @@
+<link rel="import" href="bower_components/polymer/polymer.html">
+<link rel="import" href="co-edit-suggestions.html">
+
+<!--
+`co-edit`
+Widget to community edit text
+
+@demo demo/index.html 
+-->
+
+<dom-module id="co-edit">
+  <template>
+    <style>
+      :host {
+        display: block;
+      }
+    </style>
+    <h2>co-edit core</h2>
+  </template>
+
+  <script>
+    Polymer({
+
+      is: 'co-edit',
+
+      properties: {
+        prop1: {
+          type: String,
+          value: 'co-edit',
+        },
+      },
+
+    });
+
+    function PopupSuggestions () {
+      var self = {
+          element: document.body,
+          log: true,
+          popupElement: null,
+          attach () {
+              self._log(self.element)
+              self.element.addEventListener('mouseup', self.mouseUpEventListener, self)
+          },
+          detach () {
+              self._log('detach')
+          },
+          mouseUpEventListener (evt) {
+              console.log(self)
+              if (self.getSelection().toString() !== '') {
+                  self._log(self.getSelection().toString())
+                  return self.openPopup(self.getSelection(), self.calculatePopupPosition(evt))
+              }
+              self.closePopup()
+          },
+          openPopup (selection, position) {
+              self._log('openPopup', selection)
+              self.popupElement = self.createPopupElement(selection.toString(), position)
+              if(self.element.querySelectorAll('.popupSuggestionsPopup').length !== 0) {
+                  self.element.removeChild(self.element.querySelector('.popupSuggestionsPopup'))
+              }
+              self.element.appendChild(self.popupElement)
+          },
+          createPopupElement (textContent, position) {
+              e = document.createElement('div')
+              e.className = 'popupSuggestionsPopup'
+              e.style.backgroundColor = 'yellow'
+              e.style.position = 'absolute'
+              e.style.top = position.top + 'px'
+              e.style.left = position.left + 'px'
+              e.style.padding = '10px'
+              e.style.boxShadow = '1px 1px 3px #000'
+
+              e.textContent = 'Verbeter vertaling van: ' + textContent
+              var improveButton = document.createElement('button')
+              improveButton.textContent = 'Verbeter'
+              e.appendChild(improveButton)
+
+              var coEdit = document.createElement('co-edit-suggestions')
+              e.appendChild(coEdit)
+
+              return self.popupElement = e
+          },
+          calculatePopupPosition (evt) {
+              var position = {
+                  top: evt.clientY,
+                  left: evt.clientX,
+                  right: null,
+                  bottom: null
+              }
+
+              return position
+          },
+          closePopup () {
+              self._log('closePopup')
+              var allPopups = document.querySelectorAll('.popupSuggestionsPopup')
+              allPopups.forEach(function (node) {
+                  node.parentNode.removeChild(node)
+              })
+          },
+          getSelection () {
+              return window.getSelection()
+          },
+          _log () {
+              if(!self.log) return
+              console.log(arguments)
+          },
+      }
+      return self
+  }
+
+  window.addEventListener('load', function() {
+      window.popupSuggestions = PopupSuggestions()
+      window.popupSuggestions.attach()
+  })
+
+  </script>
+</dom-module>
