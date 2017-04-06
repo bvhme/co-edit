@@ -1,0 +1,20 @@
+{
+  "name": "co-edit",
+  "authors": [
+    "Boris van Hoytema <boris@vanhoytema.com>"
+  ],
+  "description": "Suggestions for text on websites in a widget",
+  "main": "index.html",
+  "license": "C",
+  "homepage": "",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "polymer": "^1.8.1"
+  }
+}
