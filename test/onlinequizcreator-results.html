@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Co-Edit test results</title>
+    <script src="/bower_components/webcomponentsjs/webcomponents-lite.js"></script>
+    <script src="/bower_components/web-component-tester/browser.js"></script>
+    <link rel="import" href="/bower_components/polymerfire/firebase-app.html"></link>
+    <link rel="import" href="/co-edit-results.html">
+</head>
+<body>
+    <h1>Results</h1>
+
+    <style>
+        body {
+            font-family: 'Helvetica';
+            margin: 1em;
+        }
+    </style>
+
+    <firebase-app
+        api-key="AIzaSyAhEMfDT9XHCqbxF4STUO2IrP6j4-7lwbk"
+        auth-domain="co-edit.firebaseapp.com"
+        database-url="https://co-edit.firebaseio.com"
+        messaging-sender-id="798350171172"
+        storage-bucket="co-edit.appspot.com"
+    ></firebase-app>
+
+    <co-edit-results></co-edit-results>
+</body>
+</html>

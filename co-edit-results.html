@@ -1,0 +1,59 @@
+<link rel="import" href="bower_components/polymer/polymer.html">
+<link rel="import" href="bower_components/polymerfire/firebase-query.html">
+
+<!--
+`co-edit`
+Widget to community edit text
+
+@demo demo/index.html 
+-->
+
+<dom-module id="co-edit-results">
+  <template>
+    <style>
+      :host {
+        display: block;
+      }
+      article {
+          background: #eee;
+          padding: 0.5rem;
+          margin-bottom: 0.5rem;
+      }
+      p {
+          padding: 0;
+          margin: 0;
+      }
+    </style>
+    
+    <firebase-query
+        id="query"
+        path="/suggestions"
+        data="{{data}}">
+    </firebase-query>
+
+    <template is="dom-repeat" items="{{data}}" as="result">
+        <article>
+            <p>email: {{result.email}}</p>
+            <p>newString: {{result.newString}}</p>
+            <p>string: {{result.string}}</p>
+        </article>
+    </template>
+
+  </template>
+
+  <script>
+    Polymer({
+
+      is: 'co-edit-results',
+
+      properties: {
+        prop1: {
+          type: String,
+          value: 'co-edit',
+        },
+        
+      },
+
+    });
+    </script>
+</dom-module>
